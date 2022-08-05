@@ -1,3 +1,3 @@
 # garmin-export
 
-Export data in .csv format
+Export data from Garmin Connect in .csv format
