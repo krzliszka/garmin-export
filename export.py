@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-gcexport.py
+export.py
 """
 
 from datetime import datetime, timedelta, tzinfo
@@ -22,7 +22,6 @@ import os.path
 import re
 import string
 import sys
-from turtle import down
 import unicodedata
 import zipfile
 
@@ -31,12 +30,10 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import urllib
-
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request
 
-from zmq import device
 
 from filtering import update_download_stats, read_exclude
 
@@ -49,7 +46,7 @@ SCRIPT_VERSION = '1.0.0'
 # it's almost the datetime format that is used by Garmin in the activity-search-service
 ALMOST_RFC_1123 = "%a, %d %b %Y %H:%M" # JSON display fields -  Garmin didn't zero-pad the date and the hour, but %d and %H do
 
-VALID_FILENAME_CHARS = f"-_.() {string.ascii_letters}{string.digits}"
+VALID_FILENAME_CHARS = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 # mapping of numeric parentTypeId to names in CSV output
 PARENT_TYPE_ID = {
@@ -894,7 +891,6 @@ def logging_verbosity(verbosity):
 def fetch_userstats(args):
     """
     HTTP request for getting user statistic like total number of activities. The JSON will be saved as a file 'userstats.json'.
-    
     :param args:        command-line arguments (for args.directory, etc)
     :return:            JSON with user statistics
     """
@@ -929,7 +925,6 @@ def extract_display_name(profile_page):
     match = pattern.match(profile_page)
     if not match:
         raise Exception('Did not find the display name in the profile page.')
-    
     display_name = match.group(1)
     return display_name
 
@@ -961,6 +956,9 @@ def fetch_activity_list(args, total_to_download):
 
 
 def annotate_activity_list(activities, start, exclude_list):
+    """
+    Annotate activity list.
+    """
     action_list = []
     for index, a in enumerate(activities):
         if index < (start - 1):
@@ -983,7 +981,7 @@ def fetch_activity_chunk(args, num_to_download, total_downloaded):
     :param total_downloaded:    number of already downloaded summaries in previous chunks
     :return:                    List of activity summaries
     """
-    
+
     search_parameters = {
         'start': total_downloaded,
         'limit': num_to_download
@@ -1129,7 +1127,7 @@ def main(args):
     activity_type_name = load_properties(activity_type_properties)
     event_type_properties = http_req_as_string(URL_GC_EVT_PROPS)
     if args.verbosity > 0:
-        write_to_file(os.path.joun(args.directory, 'event_types.properties'), activity_type_properties, 'w')
+        write_to_file(os.path.join(args.directory, 'event_types.properties'), activity_type_properties, 'w')
     event_type_name = load_properties(event_type_properties)
 
     activities = fetch_activity_list(args, total_to_download)
@@ -1223,8 +1221,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print('Interrupted')
         sys.exit(0)
-
-
-
-
-
