@@ -88,9 +88,9 @@ DATA = {
     'webhost': WEBHOST,
     'source': BASE_URL,
     'redirectAfterAccountLoginUrl': REDIRECT,
-    'redirectAfterAccountCretionUrl': REDIRECT,
+    'redirectAfterAccountCreationUrl': REDIRECT,
     'gauthHost': SSO,
-    'locale': 'en-US',
+    'locale': 'en_US',
     'id': 'gauth-widget',
     'cssUrl': CSS,
     'clientId': 'GarminConnect',
@@ -113,7 +113,7 @@ DATA = {
     'showPassword': 'true'
 }
 
-#URLs for various services
+# URLs for various services
 
 URL_GC_LOGIN = 'https://sso.garmin.com/sso/signin?' + urlencode(DATA)
 URL_GC_POST_AUTH = 'https://connect.garmin.com/modern/activities?'
@@ -133,13 +133,11 @@ URL_GC_ORIGINAL_ACTIVITY = 'http://connect.garmin.com/proxy/download-service/fil
 def resolve_path(directory, subdir, time):
     """
     Replace time variables and returns changed path. Supported placeholders are {YYYY} and {MM}.
-
     :param directory:   export root directory
     :param subdir:      subdirectory that can have placeholders
     :param time:        date-time-string
     :return:            updated dictionary string
     """
-
     ret = os.path.join(directory, subdir)
     if re.compile(".*{YYYY}.*").match(ret):
         ret = ret.replace("{YYYY}", time[0:4])
@@ -153,7 +151,6 @@ def hhmmss_from_seconds(sec):
     """
     Converting seconds to HH:MM:SS time format.
     """
-
     if isinstance(sec, (float, int)):
         formatted_time = str(timedelta(seconds=int(sec))).zfill(8)
     else:
@@ -172,7 +169,6 @@ def sanitize_filename(name, max_length=0):
     """
     Removing or replacing characters that are unsafe for filename.
     """
-
     cleaned_filename = unicodedata.normalize('NKFD', name) if name else ''
     stripped_filename = ''.join(c for c in cleaned_filename if c in VALID_FILENAME_CHARS).replace(' ', '_')
     return stripped_filename[:max_length] if max_length > 0 else stripped_filename
@@ -180,9 +176,12 @@ def sanitize_filename(name, max_length=0):
 
 def write_to_file(filename, content, mode='w', file_time=None):
     """
-    description
-
-    :param filename:
+    Helper function that perssts content to a file.
+    :param filename:        name of the file to write
+    :param content:         content to write; can be 'bytes' or 'str'
+                            If it is 'bytes' and the mode 'w', it will be converted/decoded.
+    :param mode:            'w' or 'wb'
+    :param file_time:       if given use as timestamp for the file written (in seconds since 1970-01-01)
     """
     if mode =='w':
         write_file = io.open(filename, mode, encoding='utf-8')
