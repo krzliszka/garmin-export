@@ -183,7 +183,7 @@ def write_to_file(filename, content, mode='w', file_time=None):
     :param mode:            'w' or 'wb'
     :param file_time:       if given use as timestamp for the file written (in seconds since 1970-01-01)
     """
-    if mode =='w':
+    if mode == 'w':
         write_file = io.open(filename, mode, encoding='utf-8')
         if isinstance(content, bytes):
             content = content.decode('utf-8')
@@ -202,6 +202,8 @@ def http_req(url, post=None, headers=None):
     Making HTTP requests.
     :param url:     URL for the request
     :param post:    dictionary of POST
+    :param headers: dictionary of headers
+    :return:        response body (type 'bytes')
     """
     request = Request(url)
 
@@ -215,23 +217,20 @@ def http_req(url, post=None, headers=None):
         post = urlencode(post) # convert dictionary to POST parameter string.
         post = post.encode('utf-8')
     start_time = timer()
+
     try:
         response = OPENER.open(request, data=post)
     except HTTPError as ex:
         if hasattr(ex, 'code'):
-            logging.error("Server couldn't fulfill the request, code %s, error %s", ex.code, ex)
-            logging.info('Headers returned: \n%s', ex.info())
-            raise
-        else:
+            logging.error("Server couldn't fulfill the request, code %s, error: %s", ex.code, ex)
+            logging.info('Headers returned:\n%s', ex.info())
             raise
     except URLError as ex:
         if hasattr(ex, 'reason'):
             logging.error('Failed to reach url %s, error: %s', url, ex)
             raise
-        else:
-            raise
     logging.debug('Got %s in %s s from %s', response.getcode(), timer() - start_time, url)
-    logging.debug('Headers returned: \n%s', ex.info())
+    logging.debug('Headers returned: \n%s', response.info())
 
     if response.getcode() == 204:
         # 204 = no content, e.g. for activities without GPS coordinates there is no GPX download.
@@ -253,7 +252,7 @@ def http_req_as_string(url, post=None, headers=None):
 
 def load_properties(multiline, separator='=', comment_char='#', keys=None):
     """
-    Reading multiline string of properties (key-value pair separated by *separator*) into a dict
+    Reading multiline string of properties (key-value pair separated by *separator*) into a dict.
 
     :param multiline:       input string of properties
     :param separator:       separator between key and value
@@ -351,9 +350,9 @@ def offset_date_time(time_local, time_gmt):
 def datetime_from_iso(iso_date_time):
     """
     Calling 'datetime.strptime' supporting different ISO time formats
-    (with or without 'T' between date and time, with or without microseconds, but without offset)
-    :param iso_date_time: timestamp string in ISO format
-    :return: a 'naive' datetime
+    (with or without 'T' between date and time, with or without microseconds, but without offset).
+    :param iso_date_time:   timestamp string in ISO format
+    :return:                a 'naive' datetime
     """
     pattern = re.compile(r"(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(\.\d+)?")
     match = pattern.match(iso_date_time)
@@ -366,7 +365,9 @@ def datetime_from_iso(iso_date_time):
 
 def epoch_seconds_from_summary(summary):
     """
-    Description
+    Function determining the start time in epoch seconds (seconds since 1970-01-01).
+    :param summary:     summary dict
+    :return:            epoch seconds as integer
     """
     if present('beginTimestamp', summary):
         return summary['beginTimestamp'] // 1000
@@ -374,13 +375,13 @@ def epoch_seconds_from_summary(summary):
         dt = offset_date_time(summary['startTimeLocal'], summary['startTimeGMT'])
         return int(dt.timestamp())
     else:
-        logging.info('No tiimestamp found in activity %s', summary['activityId'])
+        logging.info('No timestamp found in activity %s', summary['activityId'])
         return None
 
 
 def pace_or_speed_raw(type_id, parent_type_id, mps):
     """
-    Converting speed (m/s) to speed (km/h) or pace (min/km) depending on type and parent type.
+    Convert speed (m/s) to speed (km/h) or pace (min/km) depending on type and parent type.                 
     """
     kmh = 3.6 * mps
     if (type_id in USES_PACE) or (parent_type_id in USES_PACE):
@@ -390,11 +391,11 @@ def pace_or_speed_raw(type_id, parent_type_id, mps):
 
 def pace_or_speed_formatted(type_id, parent_type_id, mps):
     """
-    Converting speed (m/s) to string: speed (km/h as x.x) or pace (min/km as MM:SS),
+    Convert speed (m/s) to string: speed (km/h as x.x) or pace (min/km as MM:SS),
     depending on type and parent type.
     """
     kmh = 3.6 * mps
-    if type_id in USES_PACE or parent_type_id in USES_PACE:
+    if (type_id in USES_PACE) or (parent_type_id in USES_PACE):
         return '{0:02d}:{1:02d}'.format(*divmod(int(round(3600/kmh)), 60))
     return "{0:.1f}".format(round(kmh, 1))
 
@@ -418,7 +419,7 @@ class CsvFilter:
 
     def write_header(self):
         """
-        Writing the active column names as CSV headers
+        Writing the active column names as CSV headers.
         """
         self.__writer.writeheader()
 
@@ -442,7 +443,7 @@ class CsvFilter:
         """
         return name in self.__csv_columns
 
-def parse_arguments(args):
+def parse_arguments(argv):
     """
     Setup the argument parser and parse the command line arguments.
     """
@@ -452,9 +453,9 @@ def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Garmin Connect Exporter')
 
     parser.add_argument('-v','--version', action='version', version='%(prog)s ' + SCRIPT_VERSION,
-                        help='print  version and exit')
+                        help='print version and exit')
     parser.add_argument('-vv', '--verbose', action='count', default=0,
-                        help='show output and log verbosity, save more indermediate files')
+                        help='show output and log verbosity, save more intermediate files')
     parser.add_argument('-u', '--username',
                         help='Garmin Connect username or email address')
     parser.add_argument('-p', '--password',
@@ -488,7 +489,7 @@ def parse_arguments(args):
     parser.add_argument('-ex', '--exclude', metavar='FILE',
                         help='JSON file with Array of activity IDs to exclude from download. Format example: {"ids": ["6176888711"]}')
 
-    return parser.parse_args(args[1:])
+    return parser.parse_args(argv[1:])
 
 def login_to_garmin_connect(args):
     """
@@ -539,7 +540,7 @@ def login_to_garmin_connect(args):
     print('Done. Ticket=', login_ticket, sep='')
 
     print('Authenticating...', end='')
-    logging.info('Authentiction URL %s', f'{URL_GC_POST_AUTH}ticket={login_ticket}')
+    logging.info('Authentication URL %s', f'{URL_GC_POST_AUTH}ticket={login_ticket}')
     http_req(f'{URL_GC_POST_AUTH}ticket={login_ticket}')
     print('Done')
 
