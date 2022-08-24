@@ -46,7 +46,7 @@ SCRIPT_VERSION = '1.0.0'
 # it's almost the datetime format that is used by Garmin in the activity-search-service
 ALMOST_RFC_1123 = "%a, %d %b %Y %H:%M" # JSON display fields -  Garmin didn't zero-pad the date and the hour, but %d and %H do
 
-VALID_FILENAME_CHARS = "-_.() %s%s" % (string.ascii_letters, string.digits)
+VALID_FILENAME_CHARS = f"-_.() {string.ascii_letters}{string.digits}"
 
 # mapping of numeric parentTypeId to names in CSV output
 PARENT_TYPE_ID = {
@@ -188,7 +188,7 @@ def write_to_file(filename, content, mode='w', file_time=None):
         if isinstance(content, bytes):
             content = content.decode('utf-8')
     elif mode == 'wb':
-        write_file = io.open(filename, mode)
+        write_file = io.open(filename, mode, encoding="utf-8")
     else:
         raise Exception('Unsupported file mode: ', mode)
     write_file.write(content)
@@ -374,14 +374,13 @@ def epoch_seconds_from_summary(summary):
     if present('startTimeLocal', summary) and present('startTimeGMT', summary):
         dt = offset_date_time(summary['startTimeLocal'], summary['startTimeGMT'])
         return int(dt.timestamp())
-    else:
-        logging.info('No timestamp found in activity %s', summary['activityId'])
-        return None
+    logging.info('No timestamp found in activity %s', summary['activityId'])
+    return None
 
 
 def pace_or_speed_raw(type_id, parent_type_id, mps):
     """
-    Convert speed (m/s) to speed (km/h) or pace (min/km) depending on type and parent type.                 
+    Convert speed (m/s) to speed (km/h) or pace (min/km) depending on type and parent type.         
     """
     kmh = 3.6 * mps
     if (type_id in USES_PACE) or (parent_type_id in USES_PACE):
@@ -407,7 +406,7 @@ class CsvFilter:
 
     def __init__(self, csv_file, csv_header_properties):
         self.__csv_file = csv_file
-        with open(csv_header_properties, 'r') as properties:
+        with open(csv_header_properties, 'r', encoding="utf-8") as properties:
             csv_header_properties = properties.read()
         self.__csv_columns = []
         self.__csv_headers = load_properties(csv_header_properties, keys=self.__csv_columns)
