@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-export.py
+CLI for Garmin Connect - all activities exporter
 """
 
 from datetime import datetime, timedelta, tzinfo
