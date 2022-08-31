@@ -3,7 +3,6 @@
 
 """
 CLI for Garmin Connect - all activities exporter
-# TODO add description
 """
 
 from datetime import datetime, timedelta, tzinfo
